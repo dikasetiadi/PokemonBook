@@ -17,6 +17,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        
+        let screenSize = UIScreen.main.bounds.size
+        window = UIWindow(frame: CGRect(x: 0, y: 0, width: screenSize.width, height: screenSize.height))
+        
+        let rootController = HorizontalListPokemonViewController()
+        let navigation = UINavigationController(rootViewController: rootController)
+        navigation.isNavigationBarHidden = true
+        
+        window?.rootViewController = navigation
+        window?.makeKeyAndVisible()
+        
         return true
     }
 
