@@ -114,6 +114,17 @@
 			path = BaseStatusTabs;
 			sourceTree = "<group>";
 		};
+		E57063FC23D069B000B384C6 /* ViewControllerTranisition */ = {
+			isa = PBXGroup;
+			children = (
+				E588FAF323C2BF870046C6BF /* TransitionCoordinator.swift */,
+				E588FAF523C2C0BF0046C6BF /* AnimateAbleProtocol.swift */,
+				E588FAF923C2C7570046C6BF /* PushAnimator.swift */,
+				E588FAFB23C2E7C30046C6BF /* PopAnimator.swift */,
+			);
+			path = ViewControllerTranisition;
+			sourceTree = "<group>";
+		};
 		E5A34EE523CCE22F000C03F5 /* CustomGesture */ = {
 			isa = PBXGroup;
 			children = (
@@ -133,23 +144,11 @@
 		E5D5290E23BAF4E500A348A0 /* HorizontalListPokemon */ = {
 			isa = PBXGroup;
 			children = (
+				E57063FC23D069B000B384C6 /* ViewControllerTranisition */,
 				E5D5291123BAFBB300A348A0 /* View */,
 				E5D5291023BAF53900A348A0 /* Model */,
-				E5D5290F23BAF4FC00A348A0 /* ViewControllerTransitions */,
 			);
 			path = HorizontalListPokemon;
-			sourceTree = "<group>";
-		};
-		E5D5290F23BAF4FC00A348A0 /* ViewControllerTransitions */ = {
-			isa = PBXGroup;
-			children = (
-				E588FAF323C2BF870046C6BF /* TransitionCoordinator.swift */,
-				E588FAF523C2C0BF0046C6BF /* AnimateAbleProtocol.swift */,
-				E588FAF923C2C7570046C6BF /* PushAnimator.swift */,
-				E588FAFB23C2E7C30046C6BF /* PopAnimator.swift */,
-			);
-			name = ViewControllerTransitions;
-			path = "../New Group/ViewControllerTransitions";
 			sourceTree = "<group>";
 		};
 		E5D5291023BAF53900A348A0 /* Model */ = {
