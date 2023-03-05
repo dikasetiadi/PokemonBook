@@ -9,7 +9,7 @@
 import Foundation
 import AsyncDisplayKit
 
-public class HorizontalListPokemonViewController: ASViewController<ASCollectionNode> {
+public class HorizontalListPokemonViewController: ASDKViewController<ASCollectionNode> {
     private var numberOfData: Int = 10
     private var dataPokemonDummy: [ListPokemonDataDummy] = []
     private var isLoading: Bool = true
@@ -30,7 +30,7 @@ public class HorizontalListPokemonViewController: ASViewController<ASCollectionN
         return node
     }()
     
-    public init() {
+    public override init() {
         super.init(node: rootNode)
     }
     
@@ -39,10 +39,8 @@ public class HorizontalListPokemonViewController: ASViewController<ASCollectionN
         
         rootNode.delegate = self
         rootNode.dataSource = self
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
-            self?.fetchDataLocal()
-        }
+
+        fetchDataLocal()
     }
     
     public override func viewDidAppear(_ animated: Bool) {
@@ -56,7 +54,6 @@ public class HorizontalListPokemonViewController: ASViewController<ASCollectionN
             
             animationFadeIn()
         }
-        
     }
     
     // get JSON data local file
@@ -64,54 +61,81 @@ public class HorizontalListPokemonViewController: ASViewController<ASCollectionN
         
         dataPokemonDummy = loadFromBundle("PokemonData")
         
-        //dont know how the best practice to fill the data
-        //use old ways :(
-        //to populate data evolves
+        /// here we need to loop manually,
+        /// because we have to setup data for evolution chain data UI
+        ///
         for (idx, dataPokemon) in dataPokemonDummy.enumerated() {
             let nowDataEvolutions = dataPokemon.evolutions
             
             // here we handle the evolutions arr data
             var newArrEvolutions: [ListPokemonDataDummy] = []
             for evolutionID in nowDataEvolutions {
-                let range = evolutionID.index(after: evolutionID.startIndex)..<evolutionID.endIndex
-                if let intID = Int(evolutionID[range]), intID <= dataPokemonDummy.count {
-                    // we -1 because index always start from 0
-                    newArrEvolutions.append(dataPokemonDummy[intID - 1])
+                /// we want to make sure only give the right array to render evolution chain
+                ///
+                if var evolutionPokemonData = dataPokemonDummy.first(where: { $0.id == evolutionID }) {
+                                       
+                    /// check if has any evolved from
+                    ///
+                    let pokemonEvolveFromID = evolutionPokemonData.evolvedfrom
+                    
+                    if pokemonEvolveFromID.count > 0,
+                       let pokemonEvolvedFromData = dataPokemonDummy.first(where: { $0.id == pokemonEvolveFromID }) {
+                        /// we -1 because index always start from 0
+                        ///
+                        evolutionPokemonData.evolvedFromData = [pokemonEvolvedFromData]
+                    } else {
+                        evolutionPokemonData.evolvedFromData = nil
+                    }
+                    
+                    newArrEvolutions.append(evolutionPokemonData)
                 }
             }
-            //we fill
+            
+            /// we fill all data we prepared before
+            ///
             dataPokemonDummy[idx].evolveArr = newArrEvolutions
-
-            // here we handle the evolutions from data
-            let pokemonEvolveFromID = dataPokemon.evolvedfrom
-            if pokemonEvolveFromID.count > 0 {
-                let range = pokemonEvolveFromID.index(after: pokemonEvolveFromID.startIndex)..<pokemonEvolveFromID.endIndex
-                if let intID = Int(pokemonEvolveFromID[range]), intID <= dataPokemonDummy.count {
-                    // we -1 because index always start from 0
-                    dataPokemonDummy[idx].evolvedFromData?.append(dataPokemonDummy[intID - 1])
-                }
-            }
         }
         
-        isLoading = false
-        rootNode.reloadData { [weak self] in
+        /// to simulate delay loading while we ready get all the data
+        ///
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0) { [weak self] in
             guard let self = self else { return }
             
-            self.setBackgroundBase()
+            self.isLoading = false
+            self.rootNode.reloadData { [weak self] in
+                self?.setBackgroundBase()
+            }
         }
     }
     
     private func updateDataLimit() {
-        numberOfData += 10
+        /// make sure we added the correct remaining data
+        ///
+        let addedNumberData: Int = {
+            let countRemainingPokemonData = dataPokemonDummy.count - numberOfData
+            
+            guard countRemainingPokemonData > 0 else { return 0 }
+            
+            if countRemainingPokemonData >= 10 {
+                return 10
+            } else {
+                return countRemainingPokemonData
+            }
+        }()
+        
+        guard addedNumberData > 0 else { return }
+        
+        numberOfData += addedNumberData
         rootNode.reloadData()
     }
     
     internal func setBackgroundBase() {
-        var visibleRect = CGRect()
-        visibleRect.origin = rootNode.contentOffset
-        visibleRect.size = rootNode.bounds.size
-        
+        let visibleRect = CGRect(
+            origin: rootNode.contentOffset,
+            size: rootNode.bounds.size
+        )
         let visiblePoint = CGPoint(x: visibleRect.midX, y: visibleRect.midY)
+        
         guard let indexPath = rootNode.indexPathForItem(at: visiblePoint) else { return }
         
         let bgColor = whichBackgroundColor(idx: indexPath)
@@ -122,6 +146,7 @@ public class HorizontalListPokemonViewController: ASViewController<ASCollectionN
     }
     
     private func whichBackgroundColor(idx: IndexPath) -> UIColor {
+        guard idx.row < dataPokemonDummy.count else { return .lightBluePallete }
         
         let typesArr = dataPokemonDummy[idx.row].typeofpokemon[0].lowercased()
         let bgColor: UIColor
@@ -151,19 +176,21 @@ public class HorizontalListPokemonViewController: ASViewController<ASCollectionN
     private func animationFadeIn() {
         let cells = rootNode.indexPathsForVisibleItems
         let cellsCount = cells.count
-        var index = 0
         
         if cellsCount > 0 {
             for idx in 0..<cellsCount {
                 let itemCell = rootNode.nodeForItem(at: cells[idx])
                 if selectedIndexPath != cells[idx] {
-                    if selectedIndexPath != cells[idx] {
-                        UIView.animate(withDuration: 0.3, delay: 0.15 * Double(idx), options: [], animations: {
+                    UIView.animate(
+                        withDuration: 0.3,
+                        delay: 0.15 * Double(idx),
+                        options: [],
+                        animations: {
                             itemCell?.alpha = 1
                             itemCell?.view.transform = .identity
-                        }, completion: nil)
-                    }
-                    index += 1
+                        },
+                        completion: nil
+                    )
                 } else {
                     if let nodeCell = itemCell as? PokemonHorizontalCell {
                         nodeCell.showLogo()
@@ -177,19 +204,21 @@ public class HorizontalListPokemonViewController: ASViewController<ASCollectionN
     private func animationFadeOut() {
         let cells = rootNode.indexPathsForVisibleItems
         let cellsCount = cells.count
-        var index = 0
         
         if cellsCount > 0 {
             for idx in 0..<cellsCount {
                 let itemCell = rootNode.nodeForItem(at: cells[idx])
                 if selectedIndexPath != cells[idx] {
-                    if selectedIndexPath != cells[idx] {
-                        UIView.animate(withDuration: 0.2, delay: 0.15 * Double(idx), options: [], animations: {
+                    UIView.animate(
+                        withDuration: 0.2,
+                        delay: 0.15 * Double(idx),
+                        options: [],
+                        animations: {
                             itemCell?.alpha = 0
                             itemCell?.view.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
-                        }, completion: nil)
-                    }
-                    index += 1
+                        },
+                        completion: nil
+                    )
                 } else {
                     if let nodeCell = itemCell as? PokemonHorizontalCell {
                         nodeCell.hideLogo()
@@ -219,7 +248,9 @@ extension HorizontalListPokemonViewController: ASCollectionDataSource {
     }
     
     public func collectionNode(_ collectionNode: ASCollectionNode, nodeForItemAt indexPath: IndexPath) -> ASCellNode {
-        var cell: ASCellNode = PlaceholderCell()
+        guard indexPath.row < dataPokemonDummy.count else { return ASCellNode() }
+        
+        let cell: ASCellNode
         
         if isLoading {
             cell = PlaceholderCell()
@@ -269,20 +300,13 @@ extension HorizontalListPokemonViewController: ASCollectionDelegate {
     }
     
     public func collectionNode(_ collectionNode: ASCollectionNode, willDisplayItemWith node: ASCellNode) {
-        
+        /// here we have shimmer animation logic
+        ///
         if isLoading {
-            /* shimmering logic */
             if let cellNode = node as? PlaceholderCell {
                 cellNode.startAnimation()
             }
         } else {
-            /* load more logic */
-            guard let indexPath = rootNode.indexPath(for: node) else { return }
-            
-            if indexPath.row == numberOfData - 1 {
-                updateDataLimit()
-            }
-            
             if let cellNode = node as? PokemonHorizontalCell {
                 cellNode.showLogo()
             }
@@ -290,12 +314,22 @@ extension HorizontalListPokemonViewController: ASCollectionDelegate {
     }
         
     public func collectionNode(_ collectionNode: ASCollectionNode, didEndDisplayingItemWith node: ASCellNode) {
-        
-        guard isLoading else { return }
+        guard isLoading,
+              let cellNode = node as? PlaceholderCell
+        else { return }
 
-        if let cellNode = node as? PlaceholderCell {
-            cellNode.stopAnimation()
-        }
+        cellNode.stopAnimation()
+    }
+    
+    public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        /// load more logic
+        ///
+        guard let lastVisibleIndex = rootNode.indexPathsForVisibleItems.last,
+              scrollView.contentOffset.x > 0,
+              lastVisibleIndex.row == (numberOfData - 1)
+        else { return }
+        
+        updateDataLimit()
     }
 }
 

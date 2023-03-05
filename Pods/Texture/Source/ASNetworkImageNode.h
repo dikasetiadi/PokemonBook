@@ -117,6 +117,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property BOOL shouldRenderProgressImages;
 
 /**
+ * Specifies whether the underlying image downloader should attempt to retry downloading the image if the remote
+ * host is unreachable. It will have no effect if the downloader does not support retrying. The default is YES.
+ */
+@property BOOL shouldRetryImageDownload;
+
+/**
  * The image quality of the current image.
  *
  * If the URL is set, this is a number between 0 and 1 and can be used to track
@@ -132,6 +138,13 @@ NS_ASSUME_NONNULL_BEGIN
  * The currentImageQuality (value between 0 and 1) of the last image that completed displaying.
  */
 @property (readonly) CGFloat renderedImageQuality;
+
+/**
+ * Download progress of the current image.
+ * When downloading a network image, this value would be updated to track download progress (value between 0 and 1)
+ * This is 1 if image load from cache or network successfully.
+ */
+@property (readonly) CGFloat downloadProgress;
 
 @end
 
@@ -171,6 +184,15 @@ NS_ASSUME_NONNULL_BEGIN
  * @discussion Called on the main thread.
  */
 - (void)imageNodeDidLoadImageFromCache:(ASNetworkImageNode *)imageNode;
+
+/**
+ * Notification that the image node failed to load image from cache
+ *
+ * @param imageNode The sender.
+ *
+ * @discussion Called on the main thread.
+ */
+- (void)imageNodeDidFailToLoadImageFromCache:(ASNetworkImageNode *)imageNode;
 
 /**
  * Notification that the image node will load image from network

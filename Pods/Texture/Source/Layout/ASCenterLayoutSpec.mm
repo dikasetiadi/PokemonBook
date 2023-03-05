@@ -9,8 +9,6 @@
 
 #import <AsyncDisplayKit/ASCenterLayoutSpec.h>
 
-#import <AsyncDisplayKit/ASLayout.h>
-
 @implementation ASCenterLayoutSpec
 {
   ASCenterLayoutSpecCenteringOptions _centeringOptions;
@@ -19,7 +17,7 @@
 
 - (instancetype)initWithCenteringOptions:(ASCenterLayoutSpecCenteringOptions)centeringOptions
                            sizingOptions:(ASCenterLayoutSpecSizingOptions)sizingOptions
-                                   child:(id<ASLayoutElement>)child;
+                                   child:(id<ASLayoutElement>)child
 {
   ASRelativeLayoutSpecPosition verticalPosition = [self verticalPositionFromCenteringOptions:centeringOptions];
   ASRelativeLayoutSpecPosition horizontalPosition = [self horizontalPositionFromCenteringOptions:centeringOptions];

@@ -8,7 +8,7 @@
 
 import AsyncDisplayKit
 
-internal class BaseStatusPokemonViewController: ASViewController<ASScrollNode> {
+internal class BaseStatusPokemonViewController: ASDKViewController<ASScrollNode> {
     private let rootNode: ASScrollNode = {
         let node = ASScrollNode()
         node.automaticallyManagesContentSize = true

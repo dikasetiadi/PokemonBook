@@ -17,8 +17,6 @@
 #import <AsyncDisplayKit/ASTextKitShadower.h>
 #import <AsyncDisplayKit/ASTextKitTailTruncater.h>
 #import <AsyncDisplayKit/ASTextKitFontSizeAdjuster.h>
-#import <AsyncDisplayKit/ASInternalHelpers.h>
-#import <AsyncDisplayKit/ASRunLoopQueue.h>
 
 //#define LOG(...) NSLog(__VA_ARGS__)
 #define LOG(...)
@@ -61,6 +59,7 @@ static NSCharacterSet *_defaultAvoidTruncationCharacterSet()
     CGSize shadowConstrainedSize = [[self shadower] insetSizeWithConstrainedSize:_constrainedSize];
     
     _context = [[ASTextKitContext alloc] initWithAttributedString:attributes.attributedString
+                                                        tintColor:attributes.tintColor
                                                     lineBreakMode:attributes.lineBreakMode
                                              maximumNumberOfLines:attributes.maximumNumberOfLines
                                                    exclusionPaths:attributes.exclusionPaths
@@ -191,7 +190,7 @@ static NSCharacterSet *_defaultAvoidTruncationCharacterSet()
 
 #pragma mark - Drawing
 
-- (void)drawInContext:(CGContextRef)context bounds:(CGRect)bounds;
+- (void)drawInContext:(CGContextRef)context bounds:(CGRect)bounds
 {
   // We add an assertion so we can track the rare conditions where a graphics context is not present
   ASDisplayNodeAssertNotNil(context, @"This is no good without a context.");

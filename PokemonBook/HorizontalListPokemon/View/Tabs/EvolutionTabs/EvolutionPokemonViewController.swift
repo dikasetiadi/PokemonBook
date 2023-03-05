@@ -8,7 +8,7 @@
 
 import AsyncDisplayKit
 
-internal class EvolutionPokemonViewController: ASViewController<ASScrollNode> {
+internal class EvolutionPokemonViewController: ASDKViewController<ASScrollNode> {
     private let rootNode: ASScrollNode = {
         let node = ASScrollNode()
         node.automaticallyManagesContentSize = true
@@ -124,14 +124,18 @@ internal class EvolutionPokemonViewController: ASViewController<ASScrollNode> {
         rowNode.automaticallyManagesSubnodes = true
         
         var nodeArr: [ASDisplayNode] = []
-        
-        for (idx, _) in evolutionData.enumerated() {
-            if (idx + 1) < evolutionData.count {
-                let isNeedUsingSeparator = (idx + 1) < (evolutionData.count - 1)
-                let node = generateRowEvolutionChainNode(from: evolutionData[idx], to: evolutionData[idx + 1], withSeparator: isNeedUsingSeparator)
-                
-                nodeArr.append(node)
-            }
+
+        for (idx, data) in evolutionData.enumerated() {
+            guard let evolutionFromPokemon = data.evolvedFromData?.first else { continue }
+            
+            let isNeedUsingSeparator = (idx + 1) < (evolutionData.count - 1)
+            let node = generateRowEvolutionChainNode(
+                from: evolutionFromPokemon,
+                to: data,
+                withSeparator: isNeedUsingSeparator
+            )
+            
+            nodeArr.append(node)
         }
         
         rowNode.layoutSpecBlock = { _,_ in

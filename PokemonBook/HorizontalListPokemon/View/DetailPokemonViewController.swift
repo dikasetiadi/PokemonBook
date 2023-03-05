@@ -9,8 +9,7 @@
 import AsyncDisplayKit
 import Parchment
 
-internal class DetailPokemonViewController: ASViewController<ASDisplayNode> {
-    
+internal class DetailPokemonViewController: ASDKViewController<ASDisplayNode> {
     private enum State {
         case partial
         case full
@@ -212,8 +211,8 @@ internal class DetailPokemonViewController: ASViewController<ASDisplayNode> {
         }
     }
     
-    private lazy var tabView: FixedPagingViewController = {
-        let tabs = FixedPagingViewController(viewControllers: [aboutViewController, evolutionViewController, baseStatusViewController])
+    private lazy var tabView: PagingViewController = {
+        let tabs = PagingViewController(viewControllers: [aboutViewController, evolutionViewController, baseStatusViewController])
         tabs.menuItemSize = .fixed(width: UIScreen.main.bounds.width / 3, height: 50)
         tabs.menuHorizontalAlignment = .center
         tabs.borderOptions = .visible(height: 2, zIndex: Int.max - 1, insets: UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0))
@@ -250,12 +249,10 @@ internal class DetailPokemonViewController: ASViewController<ASDisplayNode> {
     private var selectedIndex: Int = 0
     private var bottomSheetLastState: State = .partial {
         didSet {
+            guard oldValue != bottomSheetLastState else { return }
+            
             let isCanScroll = bottomSheetLastState == .full
-            for vc in tabView.viewControllers {
-                if let viewController = vc.view as? UIScrollView {
-                    viewController.isScrollEnabled = isCanScroll
-                }
-            }
+            tabView.collectionView.isScrollEnabled = isCanScroll
         }
     }
     
@@ -296,7 +293,7 @@ internal class DetailPokemonViewController: ASViewController<ASDisplayNode> {
         return viewHeight
     }()
     
-    init() {
+    override init() {
         super.init(node: rootNode)
         
         setupUI()
@@ -568,58 +565,61 @@ internal class DetailPokemonViewController: ASViewController<ASDisplayNode> {
     }
     
     @objc private func popThisPage() {
-        
         if bottomSheetLastState == .full {
-            if let VCscrollView = tabView.viewControllers[selectedIndex].view as? UIScrollView {
-                VCscrollView.setContentOffset(.zero, animated: true)
-            }
+            tabView.collectionView.setContentOffset(.zero, animated: true)
             switchAnimation(forState: .partial)
             setBottomSheetView(for: .partial)
         }
         
-        UIView.animate(withDuration: 0.5, delay: bottomSheetLastState == .full ? 0.24 : 0, options: .preferredFramesPerSecond60, animations: { [weak self] in
-            self?.headerNode.alpha = 0
-            self?.pokemonLogoNode.alpha = 0
-            self?.pokemonIDNode.alpha = 0
-            self?.pokemonCategoryNode.alpha = 0
-            }, completion: {[weak self] (finished) in
+        UIView.animate(
+            withDuration: 0.5,
+            delay: bottomSheetLastState == .full ? 0.24 : 0,
+            options: .preferredFramesPerSecond60,
+            animations: { [weak self] in
+                self?.headerNode.alpha = 0
+                self?.pokemonLogoNode.alpha = 0
+                self?.pokemonIDNode.alpha = 0
+                self?.pokemonCategoryNode.alpha = 0
+            },
+            completion: { [weak self] (finished) in
                 self?.pokemonIDNode.layer.removeAllAnimations()
                 self?.pokemonCategoryNode.layer.removeAllAnimations()
                 self?.pokemonLogoNode.layer.removeAllAnimations()
                 self?.navigationController?.popViewController(animated: true)
-        })
+            }
+        )
     }
     
     @objc private func handleBottomInfoSwipe(_ gesture: UIPanGestureRecognizer) {
         let translationY = gesture.translation(in: view).y
         gesture.setTranslation(.zero, in: view)
         
-        if let VCscrollView = tabView.viewControllers[selectedIndex].view as? UIScrollView, VCscrollView.contentOffset.y > 0 { return }
+        if tabView.collectionView.contentOffset.y > 0 { return }
         
         if gesture.state == .began || gesture.state == .changed {
             let top = gapY
             let visibleHeight: CGFloat = node.frame.height - top
             let shouldTranslate = shouldTranslateView(for: translationY, withVisibleHeight: visibleHeight, partialHeight: heightForPartialBottomSheet, fullHeight: heightForFullBottomSheet)
             guard shouldTranslate else { return }
-            
+
             gapY += translationY
             rootNode.setNeedsLayout()
             let bottomValue = bottomSheetLastState == .partial ? pokemonImageNode.frame.maxY : heightForPartialBottomSheet
-            
+
             let calculationProgress = (gapY / bottomValue)
             switchAnimationWithProgress(withProgress: calculationProgress)
-            
+
         } else if gesture.state == .ended {
             let currentY = gapY
             let isBelowHalf = currentY >= (node.frame.height * bottomSheetLastState.thresholdMultiplier)
             let state: State = isBelowHalf ? .partial : .full
-            
-            if state == .partial, let VCscrollView = tabView.viewControllers[selectedIndex].view as? UIScrollView {
+
+            if state == .partial {
                 // just to make sure this tab cannot be swiped down
-                VCscrollView.isScrollEnabled = false
-                VCscrollView.setContentOffset(.zero, animated: false)
+                tabView.collectionView.isScrollEnabled = false
+                tabView.collectionView.setContentOffset(.zero, animated: false)
             }
-            
+
             switchAnimation(forState: state)
             setBottomSheetView(for: state)
             bottomSheetLastState = state
@@ -627,9 +627,9 @@ internal class DetailPokemonViewController: ASViewController<ASDisplayNode> {
     }
     
     private func setBottomSheetView(for state: State) {
-        if let VCscrollView = tabView.viewControllers[selectedIndex].view as? UIScrollView, bottomSheetLastState == .partial {
-            VCscrollView.setContentOffset(.zero, animated: false)
-            VCscrollView.isScrollEnabled = false
+        if bottomSheetLastState == .partial {
+            tabView.collectionView.setContentOffset(.zero, animated: false)
+            tabView.collectionView.isScrollEnabled = false
         }
         
         var viewHeight: CGFloat
@@ -673,6 +673,10 @@ internal class DetailPokemonViewController: ASViewController<ASDisplayNode> {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    deinit {
+        print("\(Self.self) is deinit")
     }
 }
 
@@ -724,7 +728,7 @@ extension DetailPokemonViewController: AnimateAbleProtocol {
 extension DetailPokemonViewController: UIGestureRecognizerDelegate {
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         
-        if let VCscrollView = tabView.viewControllers[selectedIndex].view as? UIScrollView, VCscrollView.contentOffset.y > 0, bottomSheetLastState == .full {
+        if tabView.collectionView.contentOffset.y > 0, bottomSheetLastState == .full {
             return false
         }
         
@@ -733,7 +737,7 @@ extension DetailPokemonViewController: UIGestureRecognizerDelegate {
 }
 
 extension DetailPokemonViewController: PagingViewControllerDelegate {
-    func pagingViewController<T>(_ pagingViewController: PagingViewController<T>, didScrollToItem pagingItem: T, startingViewController: UIViewController?, destinationViewController: UIViewController, transitionSuccessful: Bool) where T : PagingItem, T : Comparable, T : Hashable {
+    func pagingViewController(_ pagingViewController: PagingViewController, didScrollToItem pagingItem: PagingItem, startingViewController: UIViewController?, destinationViewController: UIViewController, transitionSuccessful: Bool) {
         if transitionSuccessful {
             guard let indexItem = pagingViewController.state.currentPagingItem as? PagingIndexItem else {
                 return
@@ -741,7 +745,9 @@ extension DetailPokemonViewController: PagingViewControllerDelegate {
             
             selectedIndex = indexItem.index
             
-            if let fromVC = startingViewController, let fromVCView = fromVC.view as? UIScrollView, let toVC = destinationViewController.view as? UIScrollView {
+            if let fromVC = startingViewController,
+               let fromVCView = fromVC.view as? UIScrollView,
+               let toVC = destinationViewController.view as? UIScrollView {
                 fromVCView.setContentOffset(.zero, animated: false)
                 toVC.setContentOffset(.zero, animated: false)
             }

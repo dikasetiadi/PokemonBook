@@ -11,7 +11,6 @@
 
 #import <AsyncDisplayKit/ASLayoutSpec+Subclasses.h>
 
-#import <AsyncDisplayKit/ASAssert.h>
 #import <AsyncDisplayKit/ASInternalHelpers.h>
 
 @interface ASInsetLayoutSpec ()
@@ -40,7 +39,7 @@ static CGFloat centerInset(CGFloat outer, CGFloat inner)
 
 @implementation ASInsetLayoutSpec
 
-- (instancetype)initWithInsets:(UIEdgeInsets)insets child:(id<ASLayoutElement>)child;
+- (instancetype)initWithInsets:(UIEdgeInsets)insets child:(id<ASLayoutElement>)child
 {
   if (!(self = [super init])) {
     return nil;

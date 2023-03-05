@@ -15,7 +15,6 @@
 
 #import <AsyncDisplayKit/ASLayoutSpec+Subclasses.h>
 
-#import <AsyncDisplayKit/ASAssert.h>
 #import <AsyncDisplayKit/ASInternalHelpers.h>
 
 #pragma mark - ASRatioLayoutSpec
@@ -32,7 +31,7 @@
   return [[self alloc] initWithRatio:ratio child:child];
 }
 
-- (instancetype)initWithRatio:(CGFloat)ratio child:(id<ASLayoutElement>)child;
+- (instancetype)initWithRatio:(CGFloat)ratio child:(id<ASLayoutElement>)child
 {
   if (!(self = [super init])) {
     return nil;

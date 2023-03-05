@@ -9,7 +9,7 @@
 import Foundation
 import UIKit
 
-public struct ListPokemonDataDummy: Codable {
+public struct ListPokemonDataDummy: Decodable {
     let name: String
     let id: String
     let imageurl: String
@@ -37,38 +37,39 @@ public struct ListPokemonDataDummy: Codable {
     let evolvedfrom: String
     let reason: String
     let base_exp: String
+    
     var evolveArr: [ListPokemonDataDummy]?
     var evolvedFromData: [ListPokemonDataDummy]?
     
-    init(_ dictionary: [String: Any]) {
-        self.name = dictionary["name"] as? String ?? ""
-        self.id = dictionary["name"] as? String ?? "0"
-        self.imageurl = dictionary["imageurl"] as? String ?? ""
-        self.xdescription = dictionary["xdescription"] as? String ?? ""
-        self.ydescription = dictionary["ydescription"] as? String ?? ""
-        self.height = dictionary["height"] as? String ?? "0"
-        self.category = dictionary["category"] as? String ?? ""
-        self.weight = dictionary["weight"] as? String ?? "0"
-        self.typeofpokemon = dictionary["typeofpokemon"] as? [String] ?? [""]
-        self.weaknesses = dictionary["weaknesses"] as? [String] ?? ["none"]
-        self.evolutions = dictionary["evolutions"] as? [String] ?? [""]
-        self.abilities = dictionary["abilities"] as? [String] ?? ["none"]
-        self.hp = dictionary["hp"] as? Int ?? 0
-        self.attack = dictionary["attack"] as? Int ?? 0
-        self.defense = dictionary["defense"] as? Int ?? 0
-        self.special_attack = dictionary["special_attack"] as? Int ?? 0
-        self.special_defense = dictionary["special_defense"] as? Int ?? 0
-        self.speed = dictionary["speed"] as? Int ?? 0
-        self.total = dictionary["total"] as? Int ?? 0
-        self.male_percentage = dictionary["male_percentage"] as? String ?? nil
-        self.female_percentage = dictionary["female_percentage"] as? String ?? nil
-        self.genderless = dictionary["genderless"] as? Int ?? 0
-        self.cycles = dictionary["cycles"] as? String ?? ""
-        self.egg_groups = dictionary["egg_groups"] as? String ?? ""
-        self.evolvedfrom = dictionary["evolvedfrom"] as? String ?? ""
-        self.reason = dictionary["reason"] as? String ?? ""
-        self.base_exp = dictionary["base_exp"] as? String ?? ""
-        self.evolveArr = []
-        self.evolvedFromData = []
+    public enum CodingKeys: String, CodingKey {
+        case name
+        case id
+        case imageurl
+        case xdescription
+        case ydescription
+        case height
+        case category
+        case weight
+        case typeofpokemon
+        case weaknesses
+        case evolutions
+        case abilities
+        case hp
+        case attack
+        case defense
+        case special_attack
+        case special_defense
+        case speed
+        case total
+        case male_percentage
+        case female_percentage
+        case genderless
+        case cycles
+        case egg_groups
+        case evolvedfrom
+        case reason
+        case base_exp
     }
 }
+
+extension ListPokemonDataDummy: Equatable {}
