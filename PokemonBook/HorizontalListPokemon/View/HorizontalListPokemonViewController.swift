@@ -98,7 +98,7 @@ public class HorizontalListPokemonViewController: ASDKViewController<ASCollectio
         
         /// to simulate delay loading while we ready get all the data
         ///
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
             guard let self = self else { return }
             
             self.isLoading = false
